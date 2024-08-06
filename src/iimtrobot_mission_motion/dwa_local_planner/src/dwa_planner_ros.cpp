@@ -296,6 +296,7 @@ bool DWAPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel) {
         [this](auto pos, auto vel, auto vel_samples) { return dp_->checkTrajectory(pos, vel, vel_samples); });
   } else {
     LOG(INFO) << "compute dwa vel";  //日志test
+    LOG(INFO) << "AAA";
     bool isOk = dwaComputeVelocityCommands(current_pose_, cmd_vel);
     if (isOk) {
       publishGlobalPlan(transformed_plan);
