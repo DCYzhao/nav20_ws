@@ -1,0 +1,60 @@
+include "turtlebot_lasers.inc"
+include "stone.inc"
+
+define floorplan model
+(
+  # sombre, sensible, artistic
+  color "gray30"
+
+  # most maps will need a bounding box
+  boundary 1
+
+  gui_nose 0
+  gui_grid 0
+  gui_outline 0
+  gripper_return 0
+  fiducial_return 0
+  laser_return 1
+)
+
+define stone2 model
+(
+  size [4.000 0.400 0.400]
+  gui_nose 0
+)
+
+resolution 0.02
+interval_sim 100  # simulation timestep in milliseconds
+
+window
+(
+  size [1865  1050]
+  center [ -6.123 -6.746]
+  rotate [ 9.000 -123.000 ]
+  scale 131.105
+)
+
+floorplan
+(
+  name "maze"
+  bitmap "qz.pgm"
+  #bitmap "jc.pgm"
+  size [6.400 9.860 1.000 ]
+  pose [-5.659 -7.500 0.000 2.865 ]
+)
+
+# throw in a robot
+turtlebot
+(
+  pose [-5.971 -3.903 0.000 -1.343 ]
+  name "turtlebot"
+  color "black"
+)
+
+# throw in an obstacle
+stone( pose [ 8.337 11.588 0.000 0.000 ] color "red")
+stone( pose [ 8.004 15.233 0.000 0.000 ] color "yellow")
+stone( pose [ 18.778 -2.880 0.000 0.000 ] color "blue")
+stone2( pose [ 6.520 17.353 0.000 0.000 ] color "blue")
+pillar( pose [ 3.523 1.525 0.000 0.000 ] color "brown")
+

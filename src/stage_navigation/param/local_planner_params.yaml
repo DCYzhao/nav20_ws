@@ -1,0 +1,137 @@
+DWAPlannerROS:
+  acc_lim_x: 1.0
+  acc_lim_y: 0.0
+  acc_lim_theta: 2.0
+  acc_lim_trans: 2.0
+  max_vel_trans: 1.0
+  min_vel_trans: 0.1  # 平移速度
+  max_vel_x: 1.0
+  min_vel_x: 0.0   # 允许倒车，后方无传感器则不能倒车
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+  max_vel_theta: 1.4
+  min_vel_theta: 0.4
+
+# 目标容差参数
+  yaw_goal_tolerance: 0.1
+  xy_goal_tolerance: 0.08
+  latch_xy_goal_tolerance: true   # false
+  trans_stopped_vel: 0.05 #(double, default: 0.1) 
+  theta_stopped_vel: 0.1  #(double, default: 0.1)
+# Forward Simulation Parameters
+  sim_time: 2.1  #给定轨迹上的点之间的间隔尺寸 M
+  sim_granularity: 0.05 # # 仿真粒度,是在轨迹上的点之间采取的步长,它意味着要多频繁的检查轨迹上的点(double, default: 0.025)
+  angular_sim_granularity: 0.1  # 0.05
+  vx_samples: 10
+  vy_samples: 0
+  vth_samples: 20
+
+# Trajectory Scoring Parameters
+  path_distance_bias: 32.0   #  控制器靠近给定路径的权重 
+  goal_distance_bias: 24.0   # 尝试到达本地目标的速度权重
+  occdist_scale: 2.5  # 尝试避开障碍物的权重
+  forward_point_distance: 0.4 # 从机器人中心点到另一个得分点的距离 (double, default: 0.325)
+  scaling_speed: 0.25    # 机器人底盘启动的速度
+  max_scaling_factor: 0.2  # 机器人高速时足迹缩放程度
+
+  oscillation_reset_dist: 0.08
+  oscillation_reset_angle: 0.15
+  
+# Debugging
+  publish_traj_pc: true
+  publish_cost_grid_pc: true  #  (bool, default: false)
+  global_frame_id: odom
+
+  use_dwa: true #(bool, default: true) 使用动态窗口方法将采样速度限制为较小的窗口
+
+
+# TebLocalPlannerROS:
+
+#  odom_topic: odom
+#  map_frame: map #代价地图的TF参考坐标系
+#  # Trajectory
+  
+#  teb_autosize: True
+#  dt_ref: 0.3
+#  dt_hysteresis: 0.1
+#  min_samples: 3  # 最小大于2 
+#  max_samples: 500 #默认1000
+#  global_plan_overwrite_orientation: True
+#  allow_init_with_backwards_motion: False   #True
+#  max_global_plan_lookahead_dist: 2.0
+#  feasibility_check_no_poses: 3
+#  global_plan_viapoint_sep: 0.3
+    
+#  # Robot
+         
+#  max_vel_x: 2.0
+#  max_vel_x_backwards: 0.0  #0.2
+#  max_vel_y: 0.0
+#  max_vel_theta: 0.5
+#  acc_lim_x: 0.4
+#  acc_lim_theta: 1
+#  min_turning_radius: 0.0 # diff-drive robot (can turn on place!)
+#  cmd_angle_instead_rotvel: False
+#  wheelbase: 0.0   # cmd_angle_instead_rotvel为true才生效，转弯半径
+
+#  footprint_model:
+#    type: "polygon"
+#   #  vertices: [ [0.31, 0.34], [0.34, 0.23], [0.34, -0.23], [-0.34, -0.23], [-0.34, 0.23], [-0.31, 0.34] ]
+#    vertices: [[0.3, 0.2], [-0.3, 0.2], [-0.3, -0.2], [0.3, -0.2]]
+#  # GoalTolerance
+    
+#  xy_goal_tolerance: 0.15
+#  yaw_goal_tolerance: 0.05
+#  free_goal_vel: False  # 自由目标速度。设为False时，车辆到达终点时的目标速度为0。TEB是时间最优规划器。缺少目标速度约束将导致车辆“全速冲线”，即使前方有一堵墙也是如此 (因为撞墙的时刻不在规划器考虑范围内了)
+    
+#  # Obstacles
+    
+#  min_obstacle_dist: 0.01 # 设置了机器人轮廓，可以不设置这个参数，，通过窄通道越小，值越小
+#  inflation_dist: 0.3   # zdc  障碍物膨胀距离 大于min_obstacle_dist才有效
+#  obstacle_association_force_inclusion_factor: 10.0  #小于这个值乘以min_obstacle_dist 障碍物加入约束
+#  obstacle_association_cutoff_factor: 40.0     # #大于这个值乘以min_obstacle_dist 不再考虑
+#  legacy_obstacle_association: True
+#  include_costmap_obstacles: True
+#  costmap_obstacles_behind_robot_dist: 1.5
+#  obstacle_poses_affected: 30
+
+#  costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSMCCH"  #较为精确的方法 转化为凸多边形
+#  costmap_converter_spin_thread: True
+#  costmap_converter_rate: 5
+
+#  # Optimization
+    
+#  no_inner_iterations: 5
+#  no_outer_iterations: 4
+#  optimization_activate: True
+#  optimization_verbose: False
+#  penalty_epsilon: 0.1
+#  weight_max_vel_x: 2
+#  weight_max_vel_theta: 1
+#  weight_acc_lim_x: 1.0
+#  weight_acc_lim_theta: 1
+#  weight_kinematics_nh: 1000
+#  weight_kinematics_forward_drive: 0
+#  weight_kinematics_turning_radius: 0 # diff-drive robot (can turn on place!)
+#  weight_optimaltime: 1
+#  weight_obstacle: 50
+#  weight_dynamic_obstacle: 10 # not in use yet
+#  weight_adapt_factor: 2
+
+#  # Homotopy Class Planner
+
+#  enable_homotopy_class_planning: True
+#  enable_multithreading: True
+#  simple_exploration: False
+#  max_number_classes: 4
+#  selection_cost_hysteresis: 1.0
+#  selection_obst_cost_scale: 1.0
+#  selection_alternative_time_cost: False
+ 
+#  roadmap_graph_no_samples: 15
+#  roadmap_graph_area_width: 5
+#  h_signature_prescaler: 0.5
+#  h_signature_threshold: 0.1
+#  obstacle_keypoint_offset: 0.1
+#  obstacle_heading_threshold: 0.45
+#  visualize_hc_graph: true

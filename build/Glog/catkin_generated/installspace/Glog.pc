@@ -1,0 +1,8 @@
+prefix=/home/iimt/code/nav20_ws/install
+
+Name: Glog
+Description: Description of Glog
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,6 @@
+<launch>
+    <include file="$(find stage_navigation)/launch/map_server_node.launch" />
+    <include file="$(find stage_navigation)/launch/amcl_node.launch" />
+    <include file="$(find stage_navigation)/launch/move_base_node.launch" />
+    <!-- <include file="$(find stage_navigation)/launch/move_base_flex.launch" /> -->
+</launch>

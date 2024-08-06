@@ -1,0 +1,4 @@
+<launch>
+    <node name="map_server_node" pkg="map_server" type="map_server" args="$(find sample_stage)/world/usst_lasers.yaml" />
+</launch>
+<!-- hz_airport -->
