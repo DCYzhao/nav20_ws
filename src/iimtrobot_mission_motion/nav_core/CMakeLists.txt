@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(nav_core)
-
+add_compile_options(-std=c++17)
 find_package(catkin REQUIRED
         COMPONENTS
             std_msgs
@@ -17,6 +17,11 @@ catkin_package(
             geometry_msgs
             tf2_ros
             costmap_2d
+)
+
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
 )
 
 

@@ -76,6 +76,6 @@ int main(int argc, char **argv) {
 
   // ros::MultiThreadedSpinner s;
   ros::spin();
-
+  google::ShutdownGoogleLogging();
   return (0);
 }

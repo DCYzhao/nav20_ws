@@ -1,18 +1,15 @@
 local_costmap:
-# frame && tf
   global_frame: odom
   robot_base_frame: base_link
   transform_tolerance: 0.5
-# Rate parameters
   update_frequency: 10.0
-  publish_frequency: 5.0
-  footprint_padding: 0.00  # 增加机器人安全余量 在内切圆半价上增加距离
-# Map management parameters
+  publish_frequency: 1.0
+  footprint_padding: 0.02  # 增加机器人安全余量 在内切圆半价上增加距离
   resolution: 0.05
   rolling_window: true
   static_map: false
-  width: 6
-  height: 6
+  width: 10
+  height: 10
   map_type: costmap
   
   plugins:

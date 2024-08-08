@@ -125,7 +125,7 @@ MoveBase::MoveBase(tf2_ros::Buffer& tf)
   // create the ros wrapper for the planner's costmap... and initializer a pointer we'll use with the underlying map
   planner_costmap_ros_ = new costmap_2d::Costmap2DROS("global_costmap", tf_);
   planner_costmap_ros_->pause();
-  // LOG(INFO)<<"task_base test"; //zdc
+  LOG(INFO) << "task_base test";  // zdc
   // initialize the global planner
   try {
     planner_ = bgp_loader_.createInstance(global_planner);
@@ -854,9 +854,10 @@ bool MoveBase::executeCycle(geometry_msgs::PoseStamped& goal) {
     lock.unlock();
     ROS_DEBUG_NAMED("move_base", "pointers swapped!");
 
-    if (!tc_->setPlan(*controller_plan_)) {
+    if (!tc_->setPlan(*controller_plan_, TaskType::IDLE)) {
       // ABORT and SHUTDOWN COSTMAPS
-      ROS_ERROR("Failed to pass global plan to the controller, aborting.");
+      LOG(ERROR) << "Failed to pass global plan to the controller, aborting.";
+
       resetState();
 
       // disable the planner thread

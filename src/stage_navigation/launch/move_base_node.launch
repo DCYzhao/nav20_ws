@@ -12,8 +12,8 @@
         <rosparam file="$(find stage_navigation)/param/local_planner_params.yaml" command="load" />
         <rosparam file="$(find stage_navigation)/param/global_planner_params.yaml" command="load" />
         <rosparam file="$(find stage_navigation)/param/move_base_node_params.yaml" command="load" />
-        <rosparam file="$(find stage_navigation)/param/costmap_converter_params.yaml" command="load" /> 
+
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find stage_navigation)/cfg/rviz_navigation.rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find stage_navigation)/cfg/iimtrobot.rviz"/>
 </launch>

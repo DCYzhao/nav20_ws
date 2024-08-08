@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(dwa_local_planner)
-
+add_compile_options(-std=c++17)
 find_package(catkin REQUIRED
         COMPONENTS
             angles
@@ -24,7 +24,7 @@ include_directories(
     include
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
-    )
+)
 add_definitions(${EIGEN3_DEFINITIONS})
 
 # dynamic reconfigure
@@ -36,25 +36,39 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES dwa_local_planner
     CATKIN_DEPENDS
-        base_local_planner
-        dynamic_reconfigure
-        nav_msgs
-        pluginlib
-        sensor_msgs
-        roscpp
-        tf2
-        tf2_ros
+    base_local_planner
+    dynamic_reconfigure
+    nav_msgs
+    pluginlib
+    sensor_msgs
+    roscpp
+    tf2
+    tf2_ros
 )
 
-add_library(dwa_local_planner src/dwa_planner.cpp src/dwa_planner_ros.cpp)
+add_library(dwa_local_planner 
+    src/dwa_planner.cpp 
+    src/dwa_planner_ros.cpp
+    src/common_algorithm.cpp
+    
+    src/common/math_util.cpp
+    src/common/path_manager.cpp
+    # behavior
+    # src/behavior/behavior_base.cpp
+    # src/behavior/behavior_charging.cpp
+    # src/behavior/behavior_rotate.cpp
+    # src/behavior/behavior_recovery.cpp
+    # src/behavior/behavior_fix_follow.cpp
+    # src/behavior/behavior_free_nav.cpp
+)
 add_dependencies(dwa_local_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(dwa_local_planner ${catkin_LIBRARIES})
 
 install(TARGETS dwa_local_planner
-       ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-       LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-       RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-       )
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 install(FILES blp_plugin.xml
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
