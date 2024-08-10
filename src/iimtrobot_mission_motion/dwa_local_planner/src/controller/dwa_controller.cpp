@@ -1,5 +1,5 @@
 #include <base_local_planner/goal_functions.h>
-#include <dwa_local_planner/dwa_planner.h>
+#include <controller/dwa_controller.h>
 
 #include <cmath>
 

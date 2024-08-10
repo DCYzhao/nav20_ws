@@ -1,7 +1,7 @@
 #ifndef COMMON_ALGORITHM_H
 #define COMMON_ALGORITHM_H
 #include <common/msg.h>
-#include <dwa_local_planner/dwa_planner.h>
+#include <controller/dwa_controller.h>
 using namespace dwa_local_planner;
 class CommonAlgorithm {
  public:

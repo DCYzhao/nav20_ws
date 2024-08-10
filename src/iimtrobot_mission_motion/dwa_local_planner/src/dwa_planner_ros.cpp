@@ -76,7 +76,25 @@ void DWAPlannerROS::initialize(std::string name, tf2_ros::Buffer* tf, costmap_2d
   common_algorithm_ = std::make_shared<CommonAlgorithm>(tf, costmap_ros_);
   common_algorithm_->test_log();
   // todo 初始化需要的类
+  idle_behavior_ = std::make_shared<BehaviorIdle>(costmap_ros_);
+
+  charging_behavior_executer_ = std::make_shared<ChargingBehaviorExecuter>(tf, costmap_ros_);
+  free_decision_executer_ = std::make_shared<BehaviorFreeNav>(tf, costmap_ros_);
+  fix_follow_decision_executer_ = std::make_shared<BehaviorFixNav>(tf, costmap_ros_);
+
   // todo 初始化状态机
+  // Behavior
+  behavior_manager_.AddBehavior(CONTROLLER_STATE::IDLE, static_cast<BehaviorBase*>(idle_behavior_.get()));
+  behavior_manager_.AddBehavior(CONTROLLER_STATE::FREE_PATH,
+                                static_cast<BehaviorBase*>(free_decision_executer_.get()));
+  behavior_manager_.AddBehavior(CONTROLLER_STATE::FIX_PATH,
+                                static_cast<BehaviorBase*>(fix_follow_decision_executer_.get()));
+
+  // behavior_manager_.AddBehavior(CONTROLLER_STATE::RECOVERY_STATE,
+  //                               static_cast<BehaviorBase *>(recovery_behaviors_.get()));
+  behavior_manager_.AddBehavior(CONTROLLER_STATE::CHARGING_STATE,
+                                static_cast<BehaviorBase*>(charging_behavior_executer_.get()));
+
   state_manager_.SetState(CONTROLLER_STATE::IDLE);
   LOG(INFO) << "DWAPlannerROS Initialized";
 }  // namespace dwa_local_planner
@@ -89,8 +107,21 @@ bool DWAPlannerROS::setPlan(const PoseStampedVector& orig_global_plan, TaskType 
   }
   // if (path_type == TaskType::IDLE) {
   //   LOG(INFO) << "Get IDLE task, reste state to idle";
+  //   state_manager_.SetState(CONTROLLER_STATE::IDLE);
+  //   idle_behavior_->SetPlan();
   //   return true;
   // }
+  // if (path_type == TaskType::FIX_FOLLOW) {  // 固定跟随
+  //   state_manager_.SetState(CONTROLLER_STATE::FIX_PATH);
+  //   fix_follow_decision_executer_->SetPlan(orig_global_plan);
+  //   return true;
+  // }
+  // if (path_type == TaskType::SINGAL_GOAL) {  // 自由导航
+  //   state_manager_.SetState(CONTROLLER_STATE::FREE_PATH);
+  //   free_decision_executer_->SetPlan(orig_global_plan);
+  //   return true;
+  // }
+
   // when we get a new plan, we also want to clear any latch we may have on goal tolerances
   latchedStopRotateController_.resetLatching();
 
@@ -130,7 +161,20 @@ DWAPlannerROS::~DWAPlannerROS() {
   // make sure to clean things up
   delete dsrv_;
 }
+NavStatusInfo DWAPlannerROS::ComputeVel(geometry_msgs::Twist& cmd_vel) {
+  NavStatusInfo status;
+  // todo更新机器人位姿状态
+  // todo 更新地图
 
+  auto state = state_manager_.GetState();
+  BehaviorBase* behavior_executer = behavior_manager_.GetBehavior(state);
+  if (behavior_executer) {
+    behavior_executer->ComputeVel(cmd_vel, status);
+    return status;
+  }
+  // todo 速度平滑
+  return status;
+}
 bool DWAPlannerROS::dwaComputeVelocityCommands(geometry_msgs::PoseStamped& global_pose,
                                                geometry_msgs::Twist& cmd_vel) {
   // dynamic window sampling approach to get useful velocity commands

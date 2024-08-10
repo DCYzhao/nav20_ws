@@ -47,19 +47,23 @@ catkin_package(
 )
 
 add_library(dwa_local_planner 
-    src/dwa_planner.cpp 
     src/dwa_planner_ros.cpp
-    src/common_algorithm.cpp
-    
+
     src/common/math_util.cpp
     src/common/path_manager.cpp
+    src/common/common_algorithm.cpp
+    
+    #controller
+    src/controller/dwa_controller.cpp 
+    src/controller/pp_controller.cpp
+
     # behavior
-    # src/behavior/behavior_base.cpp
-    # src/behavior/behavior_charging.cpp
+    src/behavior/behavior_base.cpp
+    src/behavior/behavior_charging.cpp
+    src/behavior/behavior_fix_follow.cpp
+    src/behavior/behavior_free_nav.cpp
     # src/behavior/behavior_rotate.cpp
     # src/behavior/behavior_recovery.cpp
-    # src/behavior/behavior_fix_follow.cpp
-    # src/behavior/behavior_free_nav.cpp
 )
 add_dependencies(dwa_local_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(dwa_local_planner ${catkin_LIBRARIES})

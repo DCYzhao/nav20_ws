@@ -1,11 +1,7 @@
 <launch>
-    <node pkg="move_base" type="move_base" name="move_base_node" output="screen">
-        <!-- <param name="base_global_planner" value="voronoi_planner/VoronoiPlannerROS" />
-        <param name="planner_frequency" value="1.0" />
-        <param name="planner_patience" value="5.0" /> -->
-        <!--remap from="cmd_vel"    to="raw_cmd_vel"/-->
-        <rosparam file="$(find stage_navigation)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find stage_navigation)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+   
+    <node pkg="move_base" type="move_base" name="move_base_node" respawn="true" output="screen" >
+    
         <rosparam file="$(find stage_navigation)/param/global_costmap_params.yaml" command="load" />
         <rosparam file="$(find stage_navigation)/param/local_costmap_params.yaml" command="load" />
 

@@ -4,13 +4,21 @@
 #include <base_local_planner/goal_functions.h>
 #include <base_local_planner/latched_stop_rotate_controller.h>
 #include <base_local_planner/odometry_helper_ros.h>
+#include <common/common_algorithm.h>
 #include <common/msg.h>
-#include <dwa_local_planner/common_algorithm.h>
-#include <dwa_local_planner/dwa_planner.h>
 #include <dwa_local_planner/state_manager.h>
 #include <dynamic_reconfigure/server.h>
 #include <nav_core/base_local_planner.h>
 #include <nav_core/task_mode.h>
+
+#include "behavior/behavior_base.h"
+#include "behavior/behavior_charging.h"
+#include "behavior/behavior_fix_follow.h"
+#include "behavior/behavior_free_nav.h"
+#include "behavior/behavior_idle.h"
+#include "behavior/behavior_manager.h"
+#include "behavior/behavior_test.h"
+#include "controller/dwa_controller.h"
 namespace dwa_local_planner {
 class DWAPlannerROS : public nav_core::BaseLocalPlanner {
  public:
@@ -20,8 +28,8 @@ class DWAPlannerROS : public nav_core::BaseLocalPlanner {
   bool isInitialized() { return initialized_; }
   bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel);
   bool dwaComputeVelocityCommands(geometry_msgs::PoseStamped& global_pose, geometry_msgs::Twist& cmd_vel);
-  // bool setPlan(const PoseStampedVector& orig_global_plan) override;
-  bool setPlan(const PoseStampedVector& orig_global_plan, TaskType path_type) override;
+  // bool setPlan(const PoseStampedVector& orig_global_plan) override{};
+  bool setPlan(const PoseStampedVector& orig_global_plan, TaskType path_type);
   bool isGoalReached();
 
  private:
@@ -29,6 +37,8 @@ class DWAPlannerROS : public nav_core::BaseLocalPlanner {
   void publishLocalPlan(std::vector<geometry_msgs::PoseStamped>& path);
   void publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path);
   void publishTransformedPlan(std::vector<geometry_msgs::PoseStamped>& path);
+
+  NavStatusInfo ComputeVel(geometry_msgs::Twist& cmd_vel);
 
  private:
   tf2_ros::Buffer* tf_;  ///< @brief Used for transforming point clouds
@@ -51,6 +61,13 @@ class DWAPlannerROS : public nav_core::BaseLocalPlanner {
  private:
   std::shared_ptr<CommonAlgorithm> common_algorithm_;
   StateManager state_manager_;
+  BehaviorManager behavior_manager_;
+  // Behavior
+  std::shared_ptr<BehaviorIdle> idle_behavior_;
+  // std::shared_ptr<BehaviorTest> test_behavior_;
+  std::shared_ptr<BehaviorFixNav> fix_follow_decision_executer_;
+  std::shared_ptr<BehaviorFreeNav> free_decision_executer_;
+  std::shared_ptr<ChargingBehaviorExecuter> charging_behavior_executer_;
 };
 };  // namespace dwa_local_planner
 #endif

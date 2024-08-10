@@ -1,11 +1,14 @@
 #ifndef COMMON_H
 #define COMMON_H
+#include <common/math_util.h>
 #include <costmap_2d/costmap_2d.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <glog/logging.h>
+#include <nav_core/task_mode.h>
 
 #include <functional>
 #include <map>
