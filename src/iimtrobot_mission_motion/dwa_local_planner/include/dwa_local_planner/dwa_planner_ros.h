@@ -6,6 +6,8 @@
 #include <base_local_planner/odometry_helper_ros.h>
 #include <common/common_algorithm.h>
 #include <common/msg.h>
+#include <common/visualizer_util.h>
+#include <costmap_2d/costmap_2d_ros.h>
 #include <dwa_local_planner/state_manager.h>
 #include <dynamic_reconfigure/server.h>
 #include <nav_core/base_local_planner.h>
@@ -17,7 +19,6 @@
 #include "behavior/behavior_free_nav.h"
 #include "behavior/behavior_idle.h"
 #include "behavior/behavior_manager.h"
-#include "behavior/behavior_test.h"
 #include "controller/dwa_controller.h"
 namespace dwa_local_planner {
 class DWAPlannerROS : public nav_core::BaseLocalPlanner {
@@ -31,22 +32,24 @@ class DWAPlannerROS : public nav_core::BaseLocalPlanner {
   // bool setPlan(const PoseStampedVector& orig_global_plan) override{};
   bool setPlan(const PoseStampedVector& orig_global_plan, TaskType path_type);
   bool isGoalReached();
+  NavStatusInfo ComputeVel(geometry_msgs::Twist& cmd_vel) override;
 
  private:
   void reconfigureCB(DWAPlannerConfig& config, uint32_t level);
-  void publishLocalPlan(std::vector<geometry_msgs::PoseStamped>& path);
-  void publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path);
-  void publishTransformedPlan(std::vector<geometry_msgs::PoseStamped>& path);
-
-  NavStatusInfo ComputeVel(geometry_msgs::Twist& cmd_vel);
+  // void publishLocalPlan(std::vector<geometry_msgs::PoseStamped>& path);
+  // void publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path);
+  // void publishTransformedPlan(std::vector<geometry_msgs::PoseStamped>& path);
+  void UpdateCostmap2D();
 
  private:
   tf2_ros::Buffer* tf_;  ///< @brief Used for transforming point clouds
   // for visualisation, publishers of global and local plan
-  ros::Publisher g_plan_pub_, l_plan_pub_, transform_plan_pub_;
+  // ros::Publisher g_plan_pub_, l_plan_pub_, transform_plan_pub_;
   base_local_planner::LocalPlannerUtil planner_util_;
-  boost::shared_ptr<DWAPlanner> dp_;  ///< @brief The trajectory controller
+  // boost::shared_ptr<DWAPlanner> dp_;  ///< @brief The trajectory controller
+  std::shared_ptr<DWAPlanner> dp_;
   costmap_2d::Costmap2DROS* costmap_ros_;
+  costmap_2d::Costmap2D costmap_2d_;
   dynamic_reconfigure::Server<DWAPlannerConfig>* dsrv_;
   dwa_local_planner::DWAPlannerConfig default_config_;
   bool setup_;
@@ -62,6 +65,9 @@ class DWAPlannerROS : public nav_core::BaseLocalPlanner {
   std::shared_ptr<CommonAlgorithm> common_algorithm_;
   StateManager state_manager_;
   BehaviorManager behavior_manager_;
+
+  std::shared_ptr<VisualizerUtil> visualizer_util_;
+
   // Behavior
   std::shared_ptr<BehaviorIdle> idle_behavior_;
   // std::shared_ptr<BehaviorTest> test_behavior_;

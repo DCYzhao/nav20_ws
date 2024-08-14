@@ -31,7 +31,7 @@ enum class ChargingEvent : uint8_t {
 class ChargingBehaviorExecuter : public BehaviorBase {
  public:
   // ChargingBehaviorExecuter(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros);
-  ChargingBehaviorExecuter(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros);
+  ChargingBehaviorExecuter(tf2_ros::Buffer *tf, costmap_2d::Costmap2D *costmap_2d);
   ~ChargingBehaviorExecuter() = default;
   void SetPlan();
   void ComputeVel(geometry_msgs::Twist &cmd_vel, NavStatusInfo &status) override;
@@ -52,7 +52,8 @@ class ChargingBehaviorExecuter : public BehaviorBase {
   bool UpdateChargerPoint(geometry_msgs::TransformStamped &current_charge_point);  // tf获取充电桩位姿
 
   tf2_ros::Buffer *tf_;
-  costmap_2d::Costmap2DROS *costmap_ros_;
+  // costmap_2d::Costmap2DROS *costmap_ros_;
+  costmap_2d::Costmap2D *costmap_2d_;
 
   inline void setZeroSpeed(geometry_msgs::Twist &cmd_vel) {
     cmd_vel.linear.x = 0.0;

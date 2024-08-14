@@ -7,7 +7,7 @@
 
 class BehaviorBase {
  public:
-  BehaviorBase(costmap_2d::Costmap2DROS *costmap_ros){};
+  BehaviorBase(costmap_2d::Costmap2D *costmap_2d){};
   BehaviorBase() = default;
   ~BehaviorBase() = default;
 

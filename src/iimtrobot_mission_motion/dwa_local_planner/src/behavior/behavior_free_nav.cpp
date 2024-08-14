@@ -1,7 +1,8 @@
 #include "behavior/behavior_free_nav.h"
 
-BehaviorFreeNav::BehaviorFreeNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros)
-    : BehaviorBase(costmap_ros), tf_(tf), costmap_ros_(costmap_ros) {
+BehaviorFreeNav::BehaviorFreeNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros,
+                                 costmap_2d::Costmap2D *costmap_2d, std::shared_ptr<DWAPlanner> &dp)
+    : BehaviorBase(costmap_2d), tf_(tf), costmap_ros_(costmap_ros), costmap_2d_(costmap_2d), dp_(dp) {
   LOG(INFO) << "BehaviorFreeNav INIT";
   state_map_fun_[FreeNavState::IDLE] = std::bind(&BehaviorFreeNav::ExecIDLE, this, std::placeholders::_1,
                                                  std::placeholders::_2, std::placeholders::_3);
@@ -24,6 +25,7 @@ BehaviorFreeNav::BehaviorFreeNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *
   // state_map_fun_[FreeNavState::RECOVERY_STATE] =
   //     std::bind(&BehaviorFreeNav::ExecRecovery, this, std::placeholders::_1, std::placeholders::_2,
   //               std::placeholders::_3);
+  path_manager_ = std::make_unique<PathManager>(costmap_2d);
   CreateFsmState();
   ros::NodeHandle private_nh("~/BehaviorFreeNav/");
   global_frame_id_ = "/odom";
@@ -53,10 +55,6 @@ void BehaviorFreeNav::CreateFsmState() {
     LOG(INFO) << "CreateFsmState: Request from NORMAL_RUNNING->MOVE_TO_GOAL";
     state_machine_.SetState(FreeNavState::MOVE_TO_GOAL);
   };
-  state_machine_.On(FreeNavState::NORMAL_RUNNING, FreeNavEvent::REQUEST_RECOVERY) = [&] {
-    LOG(INFO) << "CreateFsmState: Request from NORMAL_RUNNING->RECOVERY_STATE";
-    state_machine_.SetState(FreeNavState::RECOVERY_STATE);
-  };
 
   state_machine_.On(FreeNavState::RECOVERY_STATE, FreeNavEvent::REQUEST_NORMAL_RUNNING) = [&] {
     // ResetNormalRunning();
@@ -71,15 +69,19 @@ void BehaviorFreeNav::CreateFsmState() {
 }
 void BehaviorFreeNav::SetPlan(const PoseStampedVector &global_plan) {
   // 新的路径进来 重置状态
+  LOG(INFO) << "free setplan";
+  state_machine_.SetState(FreeNavState::IDLE);
+  SetGoalReached(false);
+  // dp_->setPlan(global_plan);
 }
 
 void BehaviorFreeNav::ComputeVel(geometry_msgs::Twist &cmd_vel, NavStatusInfo &status) {
   PoseStampedVector transformed_plan;
-  //   if (!path_manager_->GetTransformedPlan(current_pose_, transformed_plan)) {
-  //     LOG(ERROR) << "Could not get local plan";
-  //     status.status = NavStatus::STATUS_ERROR;
-  //     return;
-  //   }
+  if (!path_manager_->GetTransformedPlan(current_pose_, transformed_plan)) {
+    LOG(ERROR) << "Could not get local plan";
+    status.status = NavStatus::STATUS_ERROR;
+    return;
+  }
   status.status = NavStatus::STATUS_RUNNING;
 
   auto state = state_machine_.GetState();
@@ -93,6 +95,7 @@ void BehaviorFreeNav::ComputeVel(geometry_msgs::Twist &cmd_vel, NavStatusInfo &s
 FreeNavEvent BehaviorFreeNav::ExecIDLE(geometry_msgs::Twist &cmd_vel, NavStatusInfo &status,
                                        const PoseStampedVector &transformed_plan) {
   LOG(INFO) << "BehaviorFreeNav::ExecIDLE ...";
+  // todo是否需要旋转到路径方向
   return FreeNavEvent::REQUEST_NORMAL_RUNNING;
 }
 
@@ -100,6 +103,20 @@ FreeNavEvent BehaviorFreeNav::ExecNormalRunning(geometry_msgs::Twist &cmd_vel, N
                                                 PoseStampedVector &transformed_plan) {
   // default state
   LOG(INFO) << "BehaviorFreeNav::ExecNormalRunning ...";
+  // If empty plan , do nothing
+  if (transformed_plan.empty()) {
+    setZeroSpeed(cmd_vel);
+    if (ros::Time::now() > transformed_plan_empty_time_ + ros::Duration(20.0)) {
+      LOG(INFO) << "连续20s transformed_plan为空,因此结束当前任务!!!";
+      status.status = NavStatus::STATUS_ERROR_RPLAN_FAILED;
+    }
+    return FreeNavEvent::NONE;
+  } else {
+    transformed_plan_empty_time_ = ros::Time::now();
+  }
+
+  dp_->updatePlanAndLocalCosts(current_pose_, transformed_plan, costmap_ros_->getRobotFootprint());
+
   status.status = NavStatus::STATUS_RUNNING;
   return FreeNavEvent::NONE;
 }

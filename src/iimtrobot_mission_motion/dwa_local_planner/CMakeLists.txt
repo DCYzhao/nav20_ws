@@ -52,7 +52,8 @@ add_library(dwa_local_planner
     src/common/math_util.cpp
     src/common/path_manager.cpp
     src/common/common_algorithm.cpp
-    
+    src/common/visualizer_util.cpp
+
     #controller
     src/controller/dwa_controller.cpp 
     src/controller/pp_controller.cpp

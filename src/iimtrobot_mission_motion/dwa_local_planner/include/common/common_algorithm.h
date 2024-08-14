@@ -5,7 +5,7 @@
 using namespace dwa_local_planner;
 class CommonAlgorithm {
  public:
-  CommonAlgorithm(tf2_ros::Buffer* tf, costmap_2d::Costmap2DROS* costmap_ros);
+  CommonAlgorithm(tf2_ros::Buffer* tf, costmap_2d::Costmap2D* costmap_2d);
   ~CommonAlgorithm() = default;
 
   inline void setZeroSpeed(geometry_msgs::Twist& cmd_vel) {
@@ -19,7 +19,7 @@ class CommonAlgorithm {
 
  private:
   tf2_ros::Buffer* tf_;
-  costmap_2d::Costmap2DROS* costmap_ros_;
+  costmap_2d::Costmap2D* costmap_2d_;
   boost::shared_ptr<DWAPlanner> dp_;
 };
 

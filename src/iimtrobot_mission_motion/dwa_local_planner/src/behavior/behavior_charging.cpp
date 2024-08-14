@@ -1,6 +1,6 @@
 #include "behavior/behavior_charging.h"
-ChargingBehaviorExecuter::ChargingBehaviorExecuter(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros)
-    : BehaviorBase(costmap_ros), tf_(tf), costmap_ros_(costmap_ros) {
+ChargingBehaviorExecuter::ChargingBehaviorExecuter(tf2_ros::Buffer *tf, costmap_2d::Costmap2D *costmap_2d)
+    : BehaviorBase(costmap_2d), tf_(tf), costmap_2d_(costmap_2d) {
   LOG(INFO) << "ChargingBehaviorExecuter init";
   ros::NodeHandle nn;
   charging_status_pub_ = nn.advertise<std_msgs::UInt16>("charging_status", 1);
@@ -28,20 +28,12 @@ void ChargingBehaviorExecuter::CreateFsmState() {
     LOG(INFO) << "Get charger pose 1111";
     state_machine_.SetState(ChargingState::WAITING_CHARGER_POSE);
   };
-  state_machine_.On(ChargingState::NONE, ChargingEvent::REQUEST_DETACH_CHARGER) = [&] {
-    state_machine_.SetState(ChargingState::STATE_DETACHING_CHARGER);
-  };
-
   state_machine_.On(ChargingState::WAITING_CHARGER_POSE, ChargingEvent::REQUEST_ADJUST_DIRECTION) = [&] {
     state_machine_.SetState(ChargingState::STATE_CORRECT_POSTURE);
   };
 
   state_machine_.On(ChargingState::STATE_CORRECT_POSTURE, ChargingEvent::REQUEST_MOVE_FORWARD) = [&] {
     state_machine_.SetState(ChargingState::STATE_MOVE_FORWARD);
-  };
-
-  state_machine_.On(ChargingState::STATE_MOVE_FORWARD, ChargingEvent::REQUEST_SAFETY_CHECK) = [&] {
-    state_machine_.SetState(ChargingState::STATE_SAFETY_CHECK);
   };
   state_machine_.On(ChargingState::STATE_FAILURE_HANDLE, ChargingEvent::REQUEST_ADJUST_DIRECTION) = [&] {
     state_machine_.SetState(ChargingState::STATE_CORRECT_POSTURE);
@@ -59,15 +51,24 @@ ChargingEvent ChargingBehaviorExecuter::ExecuteRequestChargerPose(geometry_msgs:
   status.status = NavStatus::STATUS_RUNNING;
   ChargingEvent event = ChargingEvent::NONE;
   LOG(INFO) << "ChargingBehaviorExecuter::ExecuteRequestChargerPose ...";
-
-  //   return ChargingEvent::REQUEST_ADJUST_DIRECTION; // 切换下个状态
+  auto request_charing_pose_sec = (ros::Time::now() - state_start_time_).toSec();
+  LOG(INFO) << "charging pose sec: " << request_charing_pose_sec;
+  if (request_charing_pose_sec > 2.0) {
+    return ChargingEvent::REQUEST_ADJUST_DIRECTION;  // 切换下个状态
+  }
+  // LOG(INFO) << "charging pose sec: " << request_charing_pose_sec;
   return event;
 }
 
 ChargingEvent ChargingBehaviorExecuter::ExecuteCorrectSelfPosture(geometry_msgs::Twist &cmd_vel,
                                                                   NavStatusInfo &status) {
   status.status = NavStatus::STATUS_ROTATING;
-  //   return ChargingEvent::REQUEST_MOVE_FORWARD; // 切换下个状态
+  LOG(INFO) << "ChargingBehaviorExecuter::ExecuteCorrectSelfPosture ...";
+  auto request_charing_pose_sec = (ros::Time::now() - state_start_time_).toSec();
+  LOG(INFO) << "charging pose sec: " << request_charing_pose_sec;
+  if (request_charing_pose_sec > 5.0) {
+    return ChargingEvent::REQUEST_MOVE_FORWARD;  // 切换下个状态
+  }
   return ChargingEvent::NONE;
 }
 
@@ -75,16 +76,12 @@ ChargingEvent ChargingBehaviorExecuter::ExecuteMoveToChargerPose(geometry_msgs::
                                                                  NavStatusInfo &status) {
   // TODO need to update every loop
   status.status = NavStatus::STATUS_RUNNING;
+  LOG(INFO) << "ChargingBehaviorExecuter::ExecuteMoveToChargerPose ...";
   // return ChargingEvent::REQUEST_SAFETY_CHECK; // 切换下个状态
+  SetGoalReached(true);
   return ChargingEvent::NONE;
 }
 
-ChargingEvent ChargingBehaviorExecuter::ExecuteSafetyCheck(geometry_msgs::Twist &cmd_vel,
-                                                           NavStatusInfo &status) {
-  status.status = NavStatus::STATUS_RUNNING;
-  //    return ChargingEvent::REQUEST_DOCKING; // 切换下个状态
-  return ChargingEvent::NONE;
-}
 void ChargingBehaviorExecuter::ComputeVel(geometry_msgs::Twist &cmd_vel, NavStatusInfo &status) {
   auto state = state_machine_.GetState();
   ChargingEvent event = ChargingEvent::NONE;

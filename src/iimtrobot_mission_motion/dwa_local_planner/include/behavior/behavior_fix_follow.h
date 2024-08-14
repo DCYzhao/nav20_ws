@@ -7,7 +7,7 @@
 #include "behavior/behavior_base.h"
 class BehaviorFixNav : public BehaviorBase {
  public:
-  BehaviorFixNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros);
+  BehaviorFixNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2D *costmap_2d);
   ~BehaviorFixNav() = default;
   void ComputeVel(geometry_msgs::Twist &cmd_vel, NavStatusInfo &status) override;
   void SetPlan(const PoseStampedVector &global_plan);
@@ -26,8 +26,8 @@ class BehaviorFixNav : public BehaviorBase {
 
  private:
   tf2_ros::Buffer *tf_;
-  costmap_2d::Costmap2DROS *costmap_ros_;
-
+  //   costmap_2d::Costmap2DROS *costmap_ros_;
+  costmap_2d::Costmap2D *costmap_2d_;
   FsmMachine<FreeNavState, FreeNavEvent> state_machine_;
   void CreateFsmState();
   std::map<FreeNavState,

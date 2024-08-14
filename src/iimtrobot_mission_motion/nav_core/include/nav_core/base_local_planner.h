@@ -59,10 +59,10 @@ public:
    * @return True if a valid velocity command was found, false otherwise
    */
   virtual bool computeVelocityCommands(geometry_msgs::Twist &cmd_vel) = 0;
-  // virtual NavStatusInfo ComputeVel(geometry_msgs::Twist &cmd_vel) {
-  //   NavStatusInfo res;
-  //   return res;
-  // };
+  virtual NavStatusInfo ComputeVel(geometry_msgs::Twist &cmd_vel) {
+    NavStatusInfo res;
+    return res;
+  };
   /**
    * @brief  Check if the goal pose has been achieved by the local planner
    * @return True if achieved, false otherwise

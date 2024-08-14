@@ -9,7 +9,7 @@
 
 class BehaviorIdle : public BehaviorBase {
  public:
-  BehaviorIdle(costmap_2d::Costmap2DROS *costmap_ros) : BehaviorBase(costmap_ros) {
+  BehaviorIdle(costmap_2d::Costmap2D *costmap_2d) : BehaviorBase(costmap_2d) {
     LOG(INFO) << "BehaviorIdle init";
   }
   ~BehaviorIdle() = default;

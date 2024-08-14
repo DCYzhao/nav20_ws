@@ -539,6 +539,7 @@ void MoveBase::wakePlanner(const ros::TimerEvent& event) {
 }
 
 void MoveBase::planThread() {
+  // ros::Rate rate(0.2);
   ROS_DEBUG_NAMED("move_base_plan_thread", "Starting planner thread...");
   ros::NodeHandle n;
   ros::Timer timer;
@@ -592,6 +593,13 @@ void MoveBase::planThread() {
       // is negative (the default), it is just ignored and we have the same behavior as ever
       lock.lock();
       planning_retries_++;
+      // {
+      //   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock_planner(
+      //       *(planner_costmap_ros_->getCostmap()->getMutex()));
+      //   planner_costmap_ros_->resetLayers();
+      //   planner_costmap_ros_->updateMap();
+      //   rate.sleep();
+      // }
       if (runPlanner_ && (ros::Time::now() > attempt_end || planning_retries_ > uint32_t(max_planning_retries_))) {
         // we'll move into our obstacle clearing mode
         state_ = CLEARING;
@@ -623,7 +631,8 @@ void MoveBase::executeCb(const move_base_msgs::MoveBaseGoalConstPtr& move_base_g
                     "Aborting on goal because it was sent with an invalid quaternion");
     return;
   }
-
+  LOG(INFO) << "进来新的goal";
+  charging_path_ = false;  // test chargingflag
   geometry_msgs::PoseStamped goal = goalToGlobalFrame(move_base_goal->target_pose);
 
   publishZeroVelocity();
@@ -815,13 +824,17 @@ bool MoveBase::executeCycle(geometry_msgs::PoseStamped& goal) {
     latest_plan_ = temp_plan;
     lock.unlock();
     ROS_DEBUG_NAMED("move_base", "pointers swapped!");
-
-    if (!tc_->setPlan(*controller_plan_, TaskType::IDLE)) {
+    // todo 只有自由导航需要一直在循环setplan 充电，覆盖路径等其他任务只需要一次setplan
+    // if(TaskType::SINGAL_GOAL)
+    if (charging_path_) {
+      LOG(INFO) << "CHAGRING setplan";
+      tc_->setPlan(*controller_plan_, TaskType::CONNECT_CHARGER);
+      charging_path_ = false;
+    }
+    if (!tc_->setPlan(*controller_plan_, TaskType::SINGAL_GOAL)) {
       // ABORT and SHUTDOWN COSTMAPS
       LOG(ERROR) << "Failed to pass global plan to the controller, aborting.";
-
       resetState();
-
       // disable the planner thread
       lock.lock();
       runPlanner_ = false;
@@ -874,38 +887,60 @@ bool MoveBase::executeCycle(geometry_msgs::PoseStamped& goal) {
 
       {
         boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(controller_costmap_ros_->getCostmap()->getMutex()));
-
-        if (tc_->computeVelocityCommands(cmd_vel)) {
-          ROS_DEBUG_NAMED("move_base", "Got a valid command from the local planner: %.3lf, %.3lf, %.3lf",
-                          cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
-          last_valid_control_ = ros::Time::now();
-          // make sure that we send the velocity command to the base
-          vel_pub_.publish(cmd_vel);
-          if (recovery_trigger_ == CONTROLLING_R) recovery_index_ = 0;
-        } else {
-          ROS_DEBUG_NAMED("move_base", "The local planner could not find a valid plan.");
-          ros::Time attempt_end = last_valid_control_ + ros::Duration(controller_patience_);
-
-          // check if we've tried to find a valid control for longer than our time limit
-          if (ros::Time::now() > attempt_end) {
-            // we'll move into our obstacle clearing mode
+        NavStatusInfo status;
+        status = tc_->ComputeVel(cmd_vel);
+        vel_pub_.publish(cmd_vel);
+        switch (status.status) {
+          case NavStatus::STATUS_ERROR_DWAFAILED:
             publishZeroVelocity();
-            state_ = CLEARING;
-            recovery_trigger_ = CONTROLLING_R;
-          } else {
-            // otherwise, if we can't find a valid control, we'll go back to planning
-            last_valid_plan_ = ros::Time::now();
-            planning_retries_ = 0;
-            state_ = PLANNING;
-            publishZeroVelocity();
+            LOG(INFO) << "dwa Error could not find a valid plan";
+            break;
+          case NavStatus::STATUS_REQUESTING_PLAN:
+            // status.last_pose_index // 请求跳点路径索引点
+            ROS_INFO("REQUEST_NEW_GOAL");
+            break;
+          case NavStatus::STATUS_ERROR:
+            LOG(INFO) << "EORROR";
+            break;
+          case NavStatus::STATUS_RUNNING:
+            last_valid_control_ = ros::Time::now();
+            break;
 
-            // enable the planner thread in case it isn't running on a clock
-            boost::unique_lock<boost::recursive_mutex> lock(planner_mutex_);
-            runPlanner_ = true;
-            planner_cond_.notify_one();
-            lock.unlock();
-          }
+          default:
+            break;
         }
+
+        // if (tc_->computeVelocityCommands(cmd_vel)) {
+        //   ROS_DEBUG_NAMED("move_base", "Got a valid command from the local planner: %.3lf, %.3lf, %.3lf",
+        //                   cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
+        //   last_valid_control_ = ros::Time::now();
+        //   // make sure that we send the velocity command to the base
+        //   vel_pub_.publish(cmd_vel);
+        //   if (recovery_trigger_ == CONTROLLING_R) recovery_index_ = 0;
+        // } else {
+        //   ROS_DEBUG_NAMED("move_base", "The local planner could not find a valid plan.");
+        //   ros::Time attempt_end = last_valid_control_ + ros::Duration(controller_patience_);
+
+        //   // check if we've tried to find a valid control for longer than our time limit
+        //   if (ros::Time::now() > attempt_end) {
+        //     // we'll move into our obstacle clearing mode
+        //     publishZeroVelocity();
+        //     state_ = CLEARING;
+        //     recovery_trigger_ = CONTROLLING_R;
+        //   } else {
+        //     // otherwise, if we can't find a valid control, we'll go back to planning
+        //     last_valid_plan_ = ros::Time::now();
+        //     planning_retries_ = 0;
+        //     state_ = PLANNING;
+        //     publishZeroVelocity();
+
+        //     // enable the planner thread in case it isn't running on a clock
+        //     boost::unique_lock<boost::recursive_mutex> lock(planner_mutex_);
+        //     runPlanner_ = true;
+        //     planner_cond_.notify_one();
+        //     lock.unlock();
+        //   }
+        // }
       }
 
       break;
@@ -959,7 +994,8 @@ bool MoveBase::executeCycle(geometry_msgs::PoseStamped& goal) {
                           "Failed to find a valid plan. Even after executing recovery behaviors.");
         } else if (recovery_trigger_ == OSCILLATION_R) {
           ROS_ERROR(
-              "Aborting because the robot appears to be oscillating over and over. Even after executing all recovery "
+              "Aborting because the robot appears to be oscillating over and over. Even after executing all "
+              "recovery "
               "behaviors");
           as_->setAborted(move_base_msgs::MoveBaseResult(),
                           "Robot is oscillating. Even after executing recovery behaviors.");
@@ -1032,7 +1068,8 @@ bool MoveBase::loadRecoveryBehaviors(ros::NodeHandle node) {
               if (behavior_list[i]["type"] == recovery_loader_.getName(classes[i])) {
                 // if we've found a match... we'll get the fully qualified name and break out of the loop
                 ROS_WARN(
-                    "Recovery behavior specifications should now include the package name. You are using a deprecated "
+                    "Recovery behavior specifications should now include the package name. You are using a "
+                    "deprecated "
                     "API. Please switch from %s to %s in your yaml file.",
                     std::string(behavior_list[i]["type"]).c_str(), classes[i].c_str());
                 behavior_list[i]["type"] = classes[i];
@@ -1061,7 +1098,8 @@ bool MoveBase::loadRecoveryBehaviors(ros::NodeHandle node) {
       }
     } else {
       ROS_ERROR(
-          "The recovery behavior specification must be a list, but is of XmlRpcType %d. We'll use the default recovery "
+          "The recovery behavior specification must be a list, but is of XmlRpcType %d. We'll use the default "
+          "recovery "
           "behaviors instead.",
           behavior_list.getType());
       return false;

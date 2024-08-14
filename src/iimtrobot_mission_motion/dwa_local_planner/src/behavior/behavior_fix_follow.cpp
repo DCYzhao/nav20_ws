@@ -1,6 +1,6 @@
 #include "behavior/behavior_fix_follow.h"
-BehaviorFixNav::BehaviorFixNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2DROS *costmap_ros)
-    : BehaviorBase(costmap_ros), tf_(tf), costmap_ros_(costmap_ros) {
+BehaviorFixNav::BehaviorFixNav(tf2_ros::Buffer *tf, costmap_2d::Costmap2D *costmap_2d)
+    : BehaviorBase(costmap_2d), tf_(tf), costmap_2d_(costmap_2d) {
   LOG(INFO) << "BehaviorFixNav init";
   state_map_fun_[FreeNavState::IDLE] = std::bind(&BehaviorFixNav::ExecIDLE, this, std::placeholders::_1,
                                                  std::placeholders::_2, std::placeholders::_3);
@@ -75,7 +75,6 @@ FreeNavEvent BehaviorFixNav::ExecRequestNewPlan(geometry_msgs::Twist &cmd_vel, N
                                                 const PoseStampedVector &transformed_plan) {
   LOG(INFO) << "ExecRequestNewPlan::requset a new global plan";
   status.status = NavStatus::STATUS_REQUESTING_PLAN;
-  // GetAlternativePlan(current_pose_);
   int obs_index = 10;  // todo 计算障碍物在路径上的索引 返回给move_base
   status.last_pose_index = obs_index;
   return FreeNavEvent::NONE;
@@ -92,5 +91,7 @@ FreeNavEvent BehaviorFixNav::ExecNormalRunning(geometry_msgs::Twist &cmd_vel, Na
   // todo添加ppcontrol具体算法
   FreeNavEvent event = FreeNavEvent::NONE;
   status.status = NavStatus::STATUS_RUNNING;
+  // todo 判断路径碰撞
+  // todo 执行ppcontrol算法
   return event;
 }
