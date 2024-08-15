@@ -16,11 +16,11 @@ class BehaviorBase {
   virtual void ComputeVel(geometry_msgs::Twist &cmd_vel, NavStatusInfo &status) {}
   virtual bool IsGoalReached() { return isGoalReached_; }
   virtual void SetGoalReached(bool is_goal_reached) { isGoalReached_ = is_goal_reached; }
-  bool IsGoalLatched(const tf2_ros::Buffer &tf, const PoseStampedVector &global_plan,
-                     const std::string &global_frame, const geometry_msgs::PoseStamped &global_pose,
-                     double xy_goal_tolerance);
-  bool GetGoalPose(const tf2_ros::Buffer &tf, const std::vector<geometry_msgs::PoseStamped> &global_plan,
-                   const std::string &global_frame, geometry_msgs::PoseStamped &goal_pose);
+  // bool IsGoalLatched(const tf2_ros::Buffer &tf, const PoseStampedVector &global_plan,
+  //                    const std::string &global_frame, const geometry_msgs::PoseStamped &global_pose,
+  //                    double xy_goal_tolerance);
+  // bool GetGoalPose(const tf2_ros::Buffer &tf, const std::vector<geometry_msgs::PoseStamped> &global_plan,
+  //                  const std::string &global_frame, geometry_msgs::PoseStamped &goal_pose);
   inline void setZeroSpeed(geometry_msgs::Twist &cmd_vel) {
     cmd_vel.linear.x = 0.0;
     cmd_vel.linear.y = 0.0;

@@ -6,11 +6,11 @@
 #include <tf2_ros/transform_listener.h>
 class PathManager {
  public:
-  PathManager(costmap_2d::Costmap2D* costmap_2d);
+  PathManager(tf2_ros::Buffer* tf, costmap_2d::Costmap2D* costmap_2d);
   ~PathManager() = default;
 
-  bool PrunePlan(const geometry_msgs::PoseStamped& origin_robot_pose, PoseStampedVector& transformed_plan,
-                 double check_obs_dis);
+  bool PrunePlan(const tf2_ros::Buffer& tf, const geometry_msgs::PoseStamped& origin_robot_pose,
+                 PoseStampedVector& transformed_plan, double check_obs_dis);
   void SetPlan(const PoseStampedVector& new_path);
   bool GetTransformedPlan(const geometry_msgs::PoseStamped& origin_robot_pose,
                           PoseStampedVector& transformed_plan);

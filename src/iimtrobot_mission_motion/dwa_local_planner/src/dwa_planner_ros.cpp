@@ -79,7 +79,8 @@ void DWAPlannerROS::initialize(std::string name, tf2_ros::Buffer* tf, costmap_2d
   // todo 初始化需要的类
   idle_behavior_ = std::make_shared<BehaviorIdle>(&costmap_2d_);
   charging_behavior_executer_ = std::make_shared<ChargingBehaviorExecuter>(tf, &costmap_2d_);
-  free_decision_executer_ = std::make_shared<BehaviorFreeNav>(tf, costmap_ros, &costmap_2d_, dp_);
+  free_decision_executer_ =
+      std::make_shared<BehaviorFreeNav>(tf, costmap_ros, &costmap_2d_, dp_, visualizer_util_);
   fix_follow_decision_executer_ = std::make_shared<BehaviorFixNav>(tf, &costmap_2d_);
 
   // todo 初始化状态机
@@ -121,6 +122,7 @@ bool DWAPlannerROS::setPlan(const PoseStampedVector& orig_global_plan, TaskType 
   //   return true;
   // }
   if (path_type == TaskType::SINGAL_GOAL) {
+    LOG(INFO) << "Got new free plan";
     state_manager_.SetState(CONTROLLER_STATE::FREE_PATH);
     free_decision_executer_->SetPlan(orig_global_plan);
   }
@@ -131,10 +133,10 @@ bool DWAPlannerROS::setPlan(const PoseStampedVector& orig_global_plan, TaskType 
     charging_behavior_executer_->SetStarChargingTime(ros::Time::now());
   }
   // when we get a new plan, we also want to clear any latch we may have on goal tolerances
-  latchedStopRotateController_.resetLatching();
+  // latchedStopRotateController_.resetLatching();
 
-  LOG(INFO) << "Got new plan";
-  return dp_->setPlan(orig_global_plan);
+  return true;
+  // return dp_->setPlan(orig_global_plan);
 }
 
 // bool DWAPlannerROS::isGoalReached() {
@@ -220,7 +222,7 @@ bool DWAPlannerROS::dwaComputeVelocityCommands(geometry_msgs::PoseStamped& globa
                                                geometry_msgs::Twist& cmd_vel) {
   // dynamic window sampling approach to get useful velocity commands
   if (!isInitialized()) {
-    LOG(ERROR) << "This planner has not been initialized, please call initialize,before using this planner";
+    LOG(ERROR) << "This planner has not been initialized, please call initialize,before using this planner ";
     return false;
   }
 

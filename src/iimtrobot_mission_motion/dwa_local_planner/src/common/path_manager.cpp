@@ -1,30 +1,28 @@
 #include <common/path_manager.h>
 
-PathManager::PathManager(costmap_2d::Costmap2D* costmap_2d) : costmap_2d_(costmap_2d) {
-  local_frame_ = "/odom";
+PathManager::PathManager(tf2_ros::Buffer* tf, costmap_2d::Costmap2D* costmap_2d)
+    : tf_(tf), costmap_2d_(costmap_2d) {
+  local_frame_ = "odom";
 }
 
 bool PathManager::GetTransformedPlan(const geometry_msgs::PoseStamped& origin_robot_pose,
                                      PoseStampedVector& transformed_plan) {
-  return PrunePlan(origin_robot_pose, transformed_plan, look_ahead_dist_);
+  return PrunePlan(*tf_, origin_robot_pose, transformed_plan, look_ahead_dist_);
 }
 
-bool PathManager::PrunePlan(const geometry_msgs::PoseStamped& origin_robot_pose,
+bool PathManager::PrunePlan(const tf2_ros::Buffer& tf, const geometry_msgs::PoseStamped& origin_robot_pose,
                             PoseStampedVector& transformed_plan, double check_obs_dis) {
   transformed_plan.clear();
-
   if (origin_path_.empty()) {
     LOG(ERROR) << "Received plan with zero length";
     return false;
   }
-  tf2_ros::Buffer tf;
   const geometry_msgs::PoseStamped& plan_pose = origin_path_[nearest_index_];
   try {
     // get plan_to_global_transform from plan frame to global_frame
     geometry_msgs::TransformStamped plan_to_global_transform =
         tf.lookupTransform(local_frame_, ros::Time(), plan_pose.header.frame_id, plan_pose.header.stamp,
                            plan_pose.header.frame_id, ros::Duration(0.5));
-
     // // let's get the pose of the robot in the frame of the plan
     geometry_msgs::PoseStamped robot_pose;
     tf.transform(origin_robot_pose, robot_pose, plan_pose.header.frame_id);

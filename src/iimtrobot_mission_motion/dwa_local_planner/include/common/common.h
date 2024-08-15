@@ -44,12 +44,12 @@ enum class FreeNavState : uint8_t {
 
 enum class FreeNavEvent : uint8_t {
   NONE,
-  REQUEST_PLAN,               // 获取充电桩位置
-  REQUEST_ROTATION_IN_PLACE,  // 旋转到充电桩对象
-  REQUEST_ROTATION_AT_GOAL,   // 前进到充电桩
-  REQUEST_NORMAL_RUNNING,     // 检测两侧是否有障碍物
-  REQUEST_MOVE_TO_GOAL,       // 充电成功
-  REQUEST_RECOVERY,           // 充电成功
+  REQUEST_PLAN,
+  REQUEST_ROTATION_IN_PLACE,
+  REQUEST_ROTATION_AT_GOAL,
+  REQUEST_NORMAL_RUNNING,
+  REQUEST_MOVE_TO_GOAL,
+  REQUEST_RECOVERY,
 };
 
 enum class MotionDecision : uint8_t {

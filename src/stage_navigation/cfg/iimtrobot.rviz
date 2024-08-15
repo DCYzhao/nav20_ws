@@ -4,8 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Path1
+        - /Path2
         - /PointCloud21
-      Splitter Ratio: 0.4647058844566345
+      Splitter Ratio: 0.42941176891326904
     Tree Height: 791
   - Class: rviz/Selection
     Name: Selection
@@ -63,8 +65,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 9.564162254333496
-        Min Value: -0.7884165644645691
+        Max Value: -5.817295551300049
+        Min Value: -11.698057174682617
         Value: true
       Axis: X
       Channel Name: intensity
@@ -304,7 +306,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 104.37008666992188
+      Distance: 31.453527450561523
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -312,9 +314,9 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 7.698465347290039
-        Y: 1.2066876888275146
-        Z: -12.813642501831055
+        X: -6.188243865966797
+        Y: -6.610122203826904
+        Z: -13.880995750427246
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false

@@ -865,7 +865,8 @@ bool MoveBase::executeCycle(geometry_msgs::PoseStamped& goal) {
 
       // check to see if we've reached our goal
       if (tc_->isGoalReached()) {
-        ROS_DEBUG_NAMED("move_base", "Goal reached!");
+        // ROS_DEBUG_NAMED("move_base", "Goal reached!");
+        LOG(INFO) << "reached current goal , motion finished!!!";
         resetState();
 
         // disable the planner thread
