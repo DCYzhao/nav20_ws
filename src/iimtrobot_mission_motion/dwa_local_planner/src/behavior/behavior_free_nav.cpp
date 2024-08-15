@@ -162,7 +162,33 @@ FreeNavEvent BehaviorFreeNav::ExecMoveToFinalGoal(geometry_msgs::Twist &cmd_vel,
                                                   const PoseStampedVector &transformed_plan) {
   LOG(INFO) << "ExecMoveToFinalGoal ...";
   // todo 精跟踪
-  SetGoalReached(true);
+  double xy_goal_precisre_tolerance = xy_goal_precise_tolerance_;
+  double end_point_x = transformed_plan.back().pose.position.x;  // 获取最终的路径点坐标
+  double end_point_y = transformed_plan.back().pose.position.y;
+  double way_theta =
+      atan2(end_point_y - current_pose_.pose.position.y, end_point_x - current_pose_.pose.position.x);
+  double theta_f = angles::shortest_angular_distance(tf2::getYaw(current_pose_.pose.orientation), way_theta);
+  double dis_to_goal =
+      hypot(current_pose_.pose.position.x - end_point_x, current_pose_.pose.position.y - end_point_y);
+  if (dis_to_goal > xy_goal_precisre_tolerance) {
+    double final_speed = 0.2;
+    if (theta_f == 0.0) {
+      cmd_vel.linear.x = final_speed;
+      cmd_vel.angular.z = 0.0;
+    } else {
+      double R = dis_to_goal * 0.5 / sin(theta_f);
+      cmd_vel.linear.x = final_speed;
+      cmd_vel.angular.z = final_speed / R;
+      if (fabs(cmd_vel.angular.z) > 0.6) {
+        cmd_vel.angular.z = cmd_vel.angular.z > 0.0 ? 0.6 : -0.6;
+        cmd_vel.linear.x = cmd_vel.angular.z * R;
+      }
+    }
+  } else {
+    LOG(INFO) << "精跟踪到目标点";
+    SetGoalReached(true);
+  }
+
   return FreeNavEvent::NONE;
 }
 bool BehaviorFreeNav::ComputeVelWithDWA(geometry_msgs::PoseStamped &global_pose,
